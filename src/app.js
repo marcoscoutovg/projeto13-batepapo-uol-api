@@ -23,18 +23,14 @@ app.post("/participants", (req, res) => {
         res.sendStatus(422);
     }
 
-    if(db.collection("participants").findOne({name})) {
-        res.sendStatus(409)
-    }
-
     db.collection("participants").insertOne({name, lastStatus: Date.now()})
     .then(() => res.sendStatus(201))
     .catch((err) => console.log(err.message))
 
-    db.collection("messages").insertOne({from: name, to: "Todos", text: "entra na sala...", type: "status", time: "HH:mm:ss"})
+    db.collection("messages").insertOne({from: name, to, text, type, time: "HH:mm:ss"})
     .then(() => res.sendStatus(201))
     .catch((err) => console.log(err.message))
-    
+
     res.send(201);
 })
 
