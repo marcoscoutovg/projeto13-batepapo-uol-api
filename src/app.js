@@ -27,10 +27,6 @@ app.post("/participants", (req, res) => {
     .then(() => res.sendStatus(201))
     .catch((err) => console.log(err.message))
 
-    db.collection("messages").insertOne({from: name, to, text, type, time: "HH:mm:ss"})
-    .then(() => res.sendStatus(201))
-    .catch((err) => console.log(err.message))
-
     res.send(201);
 })
 
@@ -48,7 +44,10 @@ app.post("/messages", (req, res) => {
         return res.send(422)
     }
 
-    db.collection("messages")
+    db.collection("messages").insertOne({from: name, to, text, type, time: "HH:mm:ss"})
+    .then(() => res.sendStatus(201))
+    .catch((err) => console.log(err.message))
+
 
 })
 
