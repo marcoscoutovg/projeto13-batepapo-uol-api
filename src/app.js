@@ -13,6 +13,8 @@ app.use(express.json());
 
 const mongoClient = new MongoClient(process.env.DATABASE_URL)
 
+let hour = dayjs().format().slice(11, 19)
+
 try {
     await mongoClient.connect()
 } catch (err) {
@@ -54,6 +56,15 @@ app.post("/participants", async (req, res) => {
         if (participantsList) return res.sendStatus(409)
 
         await db.collection("participants").insertOne({ name, lastStatus: Date.now() })
+
+        await db.collection("messages").insertOne({
+            from: name,
+            to: "Todos",
+            text: "entra na sala...",
+            type: "status",
+            time: hour
+        })
+
         res.sendStatus(201)
     } catch (err) {
         console.log(err.message)
