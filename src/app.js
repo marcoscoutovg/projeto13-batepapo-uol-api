@@ -19,8 +19,8 @@ const PORT = 5000
 app.post("/participants", (req, res) => {
     const { name } = req.body;
 
-    if (!name) {
-        res.sendStatus(422);
+    if (!name || name === "") {
+        return res.sendStatus(422);
     }
 
     db.collection("participants").insertOne({name, lastStatus: Date.now()})
@@ -40,10 +40,11 @@ app.get("/participants", (req, res) => {
     .catch((err) => console.log(err.message))
 })
 
-app.post("/messages", (res, req) => {
+app.post("/messages", (req, res) => {
     const { to, text, type } = req.body;
+    const {user} = req.headers;
 
-    if (!to || !text || !type) {
+    if (!to || !text || !type || !user) {
         return res.send(422)
     }
 
@@ -52,7 +53,6 @@ app.post("/messages", (res, req) => {
 })
 
 app.get("/messages", (res, req) => {
-    const {user} = req.headers;
 
     if(!user) {
         return res.send(201)
