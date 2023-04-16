@@ -55,7 +55,10 @@ app.post("/participants", async (req, res) => {
         const participantsList = await db.collection("participants").findOne({ name })
         if (participantsList) return res.sendStatus(409)
 
-        await db.collection("participants").insertOne({ name, lastStatus: Date.now() })
+        await db.collection("participants").insertOne({
+            name,
+            lastStatus: Date.now()
+        })
 
         await db.collection("messages").insertOne({
             from: name,
@@ -115,13 +118,33 @@ app.post("/messages", async (req, res) => {
     }
 })
 
-app.get("/messages", (res, req) => {
+app.get("/messages", async (req, res) => {
 
-    if (!user) {
-        return res.send(201)
+    const { user } = req.headers;
+    const limit = req.query.limit;
+
+    try {
+        const resp = await db.collection("messages").find({
+            $or: [
+                { to: "Todos" },
+                { to: user },
+                { from: user },
+            ]
+        }).toArray()
+
+        if (limit > 0 && parseInt(limit) !== NaN) {
+            let ultimasMsg = resp.slice(-limit).reverse()
+            res.send(ultimasMsg)
+
+        } else if (limit === undefined) {
+            res.send(resp)
+
+        } else {
+            res.sendStatus(422)
+        }
+    } catch (err) {
+        res.sendStatus(500)
     }
-
-
 })
 
 app.listen(PORT, () => console.log('funcionou'));
