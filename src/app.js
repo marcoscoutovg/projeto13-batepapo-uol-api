@@ -25,17 +25,6 @@ const db = mongoClient.db()
 
 const PORT = 5000
 
-app.delete("/participants/:id", async (req, res) => {
-    const { id } = req.params
-
-    try {
-        await db.collection("participants").deleteOne({ _id: new ObjectId(id) })
-        res.status(204).send("Usuário deletado com sucesso")
-    } catch (error) {
-        res.status(500).send(error)
-    }
-})
-
 app.post("/participants", async (req, res) => {
 
     const { name } = req.body;
@@ -92,7 +81,7 @@ app.post("/messages", async (req, res) => {
     const messageSchema = joi.object({
         to: joi.string().required(),
         text: joi.string().required(),
-        type: joi.string().required()
+        type: joi.string().required().valid("message", "private_message")
     })
 
     const validation = messageSchema.validate(req.body, { abortEarly: false })
@@ -100,6 +89,10 @@ app.post("/messages", async (req, res) => {
     if (validation.error) {
         const errors = validation.error.details.map(detail => detail.message)
         return res.status(422).send(errors)
+    }
+
+    if (!user) {
+        return res.sendStatus(422)
     }
 
     try {
@@ -145,6 +138,21 @@ app.get("/messages", async (req, res) => {
     } catch (err) {
         res.sendStatus(500)
     }
+})
+
+app.post("/status", async (req, res) => {
+    const {user} = req.headers
+
+
+    if (!user) {
+        return res.sendStatus(404)
+    }
+
+    const online = await db.collection("participants").findOne({name: user})
+
+    if (!online) return res.sendStatus(404)
+
+
 })
 
 app.listen(PORT, () => console.log('funcionou'));
