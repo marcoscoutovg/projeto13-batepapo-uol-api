@@ -13,8 +13,6 @@ app.use(express.json());
 
 const mongoClient = new MongoClient(process.env.DATABASE_URL)
 
-let hour = dayjs().format().slice(11, 19)
-
 try {
     await mongoClient.connect()
 } catch (err) {
@@ -54,12 +52,12 @@ app.post("/participants", async (req, res) => {
             to: "Todos",
             text: "entra na sala...",
             type: "status",
-            time: hour
+            time: dayjs().format("HH:mm:ss")
         })
 
         res.sendStatus(201)
     } catch (err) {
-        console.log(err.message)
+        res.send(err.message)
     }
 })
 
@@ -86,28 +84,29 @@ app.post("/messages", async (req, res) => {
 
     const validation = messageSchema.validate(req.body, { abortEarly: false })
 
-    const userCadastrado = await db.collection("participants").findOne({name: user})
+    const userCadastrado = await db.collection("participants").findOne({ name: user })
 
     if (validation.error) {
         const errors = validation.error.details.map(detail => detail.message)
         return res.status(422).send(errors)
     }
 
-    if (!user) {
-        return res.sendStatus(422)
-    }
-
-    if (!userCadastrado) {
-        return res.sendStatus(422)
-    }
-
     try {
+
+        if (!user) {
+            return res.sendStatus(422)
+        }
+
+        if (!userCadastrado) {
+            return res.sendStatus(422)
+        }
+
         await db.collection("messages").insertOne({
             from: user,
             to,
             text,
             type,
-            time: hour
+            time: dayjs().format("HH:mm:ss")
         })
 
         res.sendStatus(201)
@@ -149,17 +148,25 @@ app.get("/messages", async (req, res) => {
 app.post("/status", async (req, res) => {
     const { user } = req.headers
 
-    if (!user) {
-        return res.sendStatus(404)
+    try {
+        if (!user) {
+            return res.sendStatus(404)
+        }
+
+        const userCadastrado = await db.collection("participants").findOne({ name: user })
+
+        await db.collection("participants").updateOne({ name: user },
+            { $set: { lastStatus: Date.now() } })
+
+        if (userCadastrado) {
+            return res.sendStatus(200)
+        } else {
+            return res.sendStatus(404)
+        }
+    } catch (err) {
+        res.sendStatus(500)
     }
 
-    const userCadastrado = await db.collection("participants").findOne({ name: user })
-
-    if (userCadastrado) {
-        return res.sendStatus(200)
-    } else {
-        return res.sendStatus(404)
-    }
 
 })
 
