@@ -86,12 +86,18 @@ app.post("/messages", async (req, res) => {
 
     const validation = messageSchema.validate(req.body, { abortEarly: false })
 
+    const userCadastrado = await db.collection("participants").findOne({name: user})
+
     if (validation.error) {
         const errors = validation.error.details.map(detail => detail.message)
         return res.status(422).send(errors)
     }
 
     if (!user) {
+        return res.sendStatus(422)
+    }
+
+    if (!userCadastrado) {
         return res.sendStatus(422)
     }
 
@@ -141,17 +147,19 @@ app.get("/messages", async (req, res) => {
 })
 
 app.post("/status", async (req, res) => {
-    const {user} = req.headers
-
+    const { user } = req.headers
 
     if (!user) {
         return res.sendStatus(404)
     }
 
-    const online = await db.collection("participants").findOne({name: user})
+    const userCadastrado = await db.collection("participants").findOne({ name: user })
 
-    if (!online) return res.sendStatus(404)
-
+    if (userCadastrado) {
+        return res.sendStatus(200)
+    } else {
+        return res.sendStatus(404)
+    }
 
 })
 
