@@ -170,4 +170,17 @@ app.post("/status", async (req, res) => {
 
 })
 
+setInterval(async () => {
+    try {
+        const tempoInativo = Date.now() - 10000;
+
+        await db.collection("participants").find().toArray().deleteMany({lastStatus: {$lte:tempoInativo}})
+    
+        
+    } catch (err) {
+        console.log(err.message)
+    }
+
+}, 15000)
+
 app.listen(PORT, () => console.log('funcionou'));
