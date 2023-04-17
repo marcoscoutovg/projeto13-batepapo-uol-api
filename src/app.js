@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { MongoClient, ObjectId } from "mongodb";
+import { MongoClient } from "mongodb";
 import dotenv from "dotenv";
 import dayjs from "dayjs";
 import joi from "joi";
@@ -131,7 +131,7 @@ app.get("/messages", async (req, res) => {
         }).toArray();
 
         if (limit > 0 && !Number.isNaN(limit)) {
-            let ultimasMsg = resp.slice(-limit).reverse();
+            const ultimasMsg = resp.slice(-limit).reverse();
             res.send(ultimasMsg);
 
         } else if (limit === undefined) {
