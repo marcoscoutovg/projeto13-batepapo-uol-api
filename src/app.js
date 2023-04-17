@@ -174,8 +174,21 @@ setInterval(async () => {
     try {
         const tempoInativo = Date.now() - 10000;
 
-        await db.collection("participants").find().toArray().deleteMany({lastStatus: {$lte:tempoInativo}})
-    
+        const inativos = await db.collection("participants").find({lastStatus: {$lte:tempoInativo}}).toArray()
+        
+        if (inativos) {
+            inativos.forEach( async (i) => {
+                await db.collection("messages").insertOne({
+                    from: i.name,
+                    to: "Todos",
+                    text: "sai da sala...",
+                    type: "status",
+                    time: dayjs().format("HH:mm:ss")
+                })
+            } )
+        }
+
+        await db.collection("participants").deleteMany({lastStatus: {$lte:tempoInativo}})
         
     } catch (err) {
         console.log(err.message)
